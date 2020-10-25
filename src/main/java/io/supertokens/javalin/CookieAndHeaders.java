@@ -16,6 +16,7 @@
 
 package io.supertokens.javalin;
 
+import com.google.gson.Gson;
 import io.javalin.http.Context;
 import io.supertokens.javalin.core.DeviceInfo;
 import io.supertokens.javalin.core.informationHolders.TokenInfo;
@@ -38,6 +39,8 @@ class CookieAndHeaders {
     private static final String antiCsrfHeaderKey = "anti-csrf";
     private static final String frontendSDKNameHeaderKey = "supertokens-sdk-name";
     private static final String frontendSDKVersionHeaderKey = "supertokens-sdk-version";
+
+    private static final String frontTokenHeaderKey = "front-token";
 
     private static void setCookie(Context ctx, String name, String value, @Nullable String domain, boolean secure,
                            boolean httpOnly, long expires, String path, String sameSite) {
@@ -122,9 +125,15 @@ class CookieAndHeaders {
         setHeader(ctx, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey);
     }
 
+    static void attachFrontTokenToHeader(Context ctx, TokenInfo token){
+        setHeader(ctx, frontTokenHeaderKey, new Gson().toJson(token));
+        setHeader(ctx, "Access-Control-Expose-Headers", frontTokenHeaderKey);
+    }
+
     static void attachAccessTokenToCookie(Context ctx, TokenInfo token) {
         setCookie(ctx, accessTokenCookieKey, token.token, token.domain, token.cookieSecure, true,
                 token.expiry, token.cookiePath, token.sameSite);
+        attachFrontTokenToHeader(ctx, token);
     }
 
     static void attachRefreshTokenToCookie(Context ctx, TokenInfo token) {
